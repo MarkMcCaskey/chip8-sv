@@ -1,0 +1,11 @@
+# Verilator build output
+obj_dir/
+**/obj_dir/
+
+# Waveforms
+*.vcd
+*.fst
+
+# macOS / editor cruft
+.DS_Store
+*.swp
