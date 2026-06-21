@@ -7,7 +7,7 @@ VFLAGS    ?= --binary --timing --trace -Wall -j 0
 
 # Warnings to suppress while the CPU datapath is still half-wired (declared-but-
 # unused state, undriven write port). Drop these as the design fills in.
-WIP_WAIVERS = -Wno-UNUSEDSIGNAL -Wno-UNDRIVEN -Wno-WIDTHEXPAND
+WIP_WAIVERS = -Wno-UNUSEDSIGNAL -Wno-UNDRIVEN
 
 # ---- warm-up: prove the toolchain end-to-end ----
 .PHONY: warmup
@@ -32,6 +32,14 @@ cpu:
 	$(VERILATOR) $(VFLAGS) $(WIP_WAIVERS) --Mdir obj_dir/cpu -o sim_cpu \
 		tb/tb_cpu.sv rtl/chip8_cpu.sv rtl/ram.sv
 	./obj_dir/cpu/sim_cpu
+
+# ---- M3: ALU / VF flag tests ----
+.PHONY: alu
+alu:
+	@mkdir -p obj_dir/alu
+	$(VERILATOR) $(VFLAGS) $(WIP_WAIVERS) --Mdir obj_dir/alu -o sim_alu \
+		tb/tb_alu.sv rtl/chip8_cpu.sv rtl/ram.sv
+	./obj_dir/alu/sim_alu
 
 .PHONY: clean
 clean:
