@@ -101,14 +101,38 @@ module chip8_cpu (
                         V[secondNibble] <=  V[secondNibble] & V[thirdNibble];
                     else if (fourthNibble == 3)
                         V[secondNibble] <=  V[secondNibble] ^ V[thirdNibble];
-                    else if (fourthNibble == 4) // TODO: set VF for carry
-                        V[secondNibble] <=  V[secondNibble] + V[thirdNibble];
+                    else if (fourthNibble == 4) begin
+                        logic [8:0] ninebitSum;
+                        ninebitSum = 9'(V[secondNibble]) + 9'(V[thirdNibble]);
+                        V[secondNibble] <= 8'(ninebitSum);
+                        V[4'hF] <= 8'(ninebitSum[8]);
+                        end
+                    else if (fourthNibble == 5) begin
+                        V[secondNibble] <= V[secondNibble] - V[thirdNibble];
+                        V[4'hF] <= 8'(V[secondNibble] >= V[thirdNibble]);
+                        end
+                    else if (fourthNibble == 6) begin
+                        V[secondNibble] <= V[secondNibble] >> 1;
+                        V[4'hF] <= 8'(V[secondNibble][0]);
+                        end
+                    else if (fourthNibble == 7) begin
+                        V[secondNibble] <=  V[thirdNibble] - V[secondNibble];
+                        V[4'hF] <= 8'(V[secondNibble] <= V[thirdNibble]);
+                        end
+                    else if (fourthNibble == 4'hE) begin
+                        V[secondNibble] <= V[secondNibble] << 1;
+                        V[4'hF] <= 8'(V[secondNibble][7]);
+                        end
+                    end
+                else if (topNibble == 4'h9) begin
+                    if (V[secondNibble] != V[thirdNibble])
+                        PC <= PC + 4;
                     end
                 else if (topNibble == 4'hA) begin
                     I <= opcode & 12'hFFF;
                     end
                 else if (topNibble == 4'hB)
-                    PC <= (opcode[11:0] & 12'hFFF) + V[0];
+                    PC <= (opcode[11:0] & 12'hFFF) + 12'(V[0]);
                 state <= PRIME;
                 end
             end
