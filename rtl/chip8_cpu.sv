@@ -1,7 +1,7 @@
 module chip8_cpu (
     input logic clk,
     input logic rst,
-    input logic [4:0] buttons
+    input logic [15:0] buttons
 );
     logic [7:0] V [0:15];
     logic [11:0] PC;
@@ -59,10 +59,12 @@ module chip8_cpu (
                 logic [3:0] secondNibble;
                 logic [3:0] thirdNibble;
                 logic [3:0] fourthNibble;
+                logic [7:0] bottomHalf;
                 topNibble = opcode[15:12];
                 secondNibble = opcode[11:8];
                 thirdNibble = opcode[7:4];
                 fourthNibble = opcode[3:0];
+                bottomHalf = opcode[7:0];
 
                 PC <= PC + 2;
 
@@ -129,10 +131,49 @@ module chip8_cpu (
                         PC <= PC + 4;
                     end
                 else if (topNibble == 4'hA) begin
-                    I <= opcode & 12'hFFF;
+                    I <= opcode & 16'h0FFF;
                     end
                 else if (topNibble == 4'hB)
                     PC <= (opcode[11:0] & 12'hFFF) + 12'(V[0]);
+                else if (topNibble == 4'hC) // TODO: random numbers somehow
+                    V[secondNibble] <= (8'h77 & bottomHalf);
+                else if (topNibble == 4'hD) begin
+                    // TODO: implement draw
+                    // flag set on xor hit
+                    V[4'hF] <= 8'b1;
+                    end
+                else if (topNibble == 4'hE) begin
+                    if (bottomHalf == 8'h9E) begin
+                        if (buttons[4'(V[secondNibble])])
+                            PC <= PC + 4;
+                        end
+                    else if (bottomHalf == 8'hA1) begin
+                        if (!buttons[4'(V[secondNibble])])
+                            PC <= PC + 4;
+                        end
+                    end
+                else if (topNibble == 4'hF) begin
+                    if (bottomHalf == 8'h07) begin
+                        end
+                    else if (bottomHalf == 8'h0A) begin
+                        end
+                    else if (bottomHalf == 8'h15) begin
+                        end
+                    else if (bottomHalf == 8'h18) begin
+                        end
+                    else if (bottomHalf == 8'h1E) begin
+                        I <= I + 16'(V[secondNibble]);
+                        end
+                    else if (bottomHalf == 8'h29) begin
+                        I <= 16'(V[secondNibble]) * 5;
+                        end
+                    else if (bottomHalf == 8'h33) begin
+                        end
+                    else if (bottomHalf == 8'h55) begin
+                        end
+                    else if (bottomHalf == 8'h65) begin
+                        end
+                    end
                 state <= PRIME;
                 end
             end

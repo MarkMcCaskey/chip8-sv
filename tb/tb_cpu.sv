@@ -16,7 +16,7 @@
 module tb_cpu;
     logic       clk;
     logic       rst;
-    logic [4:0] buttons;
+    logic [15:0] buttons;
     int         errors;
 
     chip8_cpu dut (
