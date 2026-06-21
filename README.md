@@ -48,8 +48,8 @@ Tick these off as you go. Each milestone is independently testable in sim.
 
 - [x] **M0 — Toolchain warm-up** — counter + testbench + waveform (`make warmup`)
 - [ ] **M1 — Memory & registers** — 4 KB RAM (block-RAM style), `V0`–`VF`, `I`, `PC`, `SP`, stack
-- [ ] **M2 — Fetch/decode FSM** — fetch a 2-byte opcode, split fields (`nnn` / `n` / `x` / `y` / `kk`)
-- [ ] **M3 — ALU & register ops** — `6xkk 7xkk 8xy0..8xyE Annn`
+- [x] **M2 — Fetch/decode FSM** — fetch a 2-byte opcode, split fields (`nnn` / `n` / `x` / `y` / `kk`)
+- [x] **M3 — ALU & register ops** — `6xkk 7xkk 8xy0..8xyE Annn` (incl. `VF` flags; flag tests pending)
 - [ ] **M4 — Control flow** — `1nnn 2nnn 00EE 3xkk 4xkk 5xy0 9xy0 Bnnn`
 - [ ] **M5 — Timers** — 60 Hz delay + sound, clock divider from the CPU clock
 - [ ] **M6 — Display** — 64×32 framebuffer + `Dxyn` sprite XOR draw with `VF` collision; `00E0` clear
