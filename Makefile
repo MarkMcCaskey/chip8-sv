@@ -8,6 +8,7 @@ VFLAGS    ?= --binary --timing --trace -Wall -j 0
 # ---- warm-up: prove the toolchain end-to-end ----
 .PHONY: warmup
 warmup:
+	@mkdir -p warmup/obj_dir
 	$(VERILATOR) $(VFLAGS) --Mdir warmup/obj_dir -o sim_counter \
 		warmup/tb_counter.sv warmup/counter.sv
 	./warmup/obj_dir/sim_counter
@@ -15,6 +16,7 @@ warmup:
 # ---- M1: 4 KB RAM ----
 .PHONY: ram
 ram:
+	@mkdir -p obj_dir/ram
 	$(VERILATOR) $(VFLAGS) --Mdir obj_dir/ram -o sim_ram \
 		tb/tb_ram.sv rtl/ram.sv
 	./obj_dir/ram/sim_ram
