@@ -13,6 +13,10 @@
 //   8xy6 shr:       V3 = 0x05 >> 1   -> 0x02, VF=1   saved in V8
 //   8xyE shl:       V4 = 0x80 << 1   -> 0x00, VF=1   saved in V9
 //   8xy7 no-borrow: VB = 0x09 - 0x02 -> 0x07, VF=1   saved in VC
+//
+// VIP-quirk cases (x != y, so they distinguish original from CHIP-48 rules):
+//   8xy6 Vy source: VE = VD(0x06)>>1 -> 0x03, VF=0   saved in VA
+//   8xy1 VF reset:  after a carry sets VF=1, VD|VD leaves VF=0 (checked raw)
 module tb_alu;
     logic       clk;
     logic       rst;
@@ -76,7 +80,13 @@ module tb_alu;
         put(12'h226, 16'h6E09);  // VE = 0x09
         put(12'h228, 16'h8BE7);  // VB = VE - VB  -> 0x07, VF=1   (8xy7 no-borrow)
         put(12'h22A, 16'h8CF0);  // VC = VF
-        put(12'h22C, 16'h122C);  // jump self (halt)
+        put(12'h22C, 16'h6D06);  // VD = 0x06
+        put(12'h22E, 16'h8ED6);  // VE = VD >> 1  -> 0x03, VF=0   (8xy6 reads Vy!)
+        put(12'h230, 16'h8AF0);  // VA = VF
+        put(12'h232, 16'h6DF0);  // VD = 0xF0
+        put(12'h234, 16'h8DD4);  // VD = VD + VD  -> 0xE0, VF=1   (sets up the flag)
+        put(12'h236, 16'h8DD1);  // VD = VD | VD  -> VF must reset to 0 (VIP)
+        put(12'h238, 16'h1238);  // jump self (halt)
 
         rst = 1'b1;
         repeat (2) @(negedge clk);
@@ -96,7 +106,10 @@ module tb_alu;
         check("8xyE msb   VF",16'(dut.V[9]),  16'h01);
         check("8xy7 res   VB",16'(dut.V[11]), 16'h07);
         check("8xy7 !brw  VF",16'(dut.V[12]), 16'h01);
-        check("PC (halt)",    16'(dut.PC),    16'h22C);
+        check("8xy6 Vy    VE",16'(dut.V[14]), 16'h03);
+        check("8xy6 Vy lsbVA",16'(dut.V[10]), 16'h00);
+        check("8xy1 rst   VF",16'(dut.V[15]), 16'h00);
+        check("PC (halt)",    16'(dut.PC),    16'h238);
 
         if (errors == 0)
             $display("ALU PASS: all 8xy_ results and VF flags correct");

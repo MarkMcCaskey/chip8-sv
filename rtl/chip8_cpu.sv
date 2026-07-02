@@ -195,12 +195,20 @@ module chip8_cpu #(
                 else if (topNibble == 4'h8) begin
                     if (fourthNibble == 0)
                         V[secondNibble] <= V[thirdNibble];
-                    else if (fourthNibble == 1)
+                    // VIP quirk: the logic ops go through the 1802's ALU and
+                    // leave VF cleared.
+                    else if (fourthNibble == 1) begin
                         V[secondNibble] <=  V[secondNibble] | V[thirdNibble];
-                    else if (fourthNibble == 2)
+                        V[4'hF] <= 8'd0;
+                        end
+                    else if (fourthNibble == 2) begin
                         V[secondNibble] <=  V[secondNibble] & V[thirdNibble];
-                    else if (fourthNibble == 3)
+                        V[4'hF] <= 8'd0;
+                        end
+                    else if (fourthNibble == 3) begin
                         V[secondNibble] <=  V[secondNibble] ^ V[thirdNibble];
+                        V[4'hF] <= 8'd0;
+                        end
                     else if (fourthNibble == 4) begin
                         logic [8:0] ninebitSum;
                         ninebitSum = 9'(V[secondNibble]) + 9'(V[thirdNibble]);
@@ -211,17 +219,19 @@ module chip8_cpu #(
                         V[secondNibble] <= V[secondNibble] - V[thirdNibble];
                         V[4'hF] <= 8'(V[secondNibble] >= V[thirdNibble]);
                         end
+                    // VIP quirk: shifts read Vy (CHIP-48/SCHIP later changed
+                    // this to shift Vx in place).
                     else if (fourthNibble == 6) begin
-                        V[secondNibble] <= V[secondNibble] >> 1;
-                        V[4'hF] <= 8'(V[secondNibble][0]);
+                        V[secondNibble] <= V[thirdNibble] >> 1;
+                        V[4'hF] <= 8'(V[thirdNibble][0]);
                         end
                     else if (fourthNibble == 7) begin
                         V[secondNibble] <=  V[thirdNibble] - V[secondNibble];
                         V[4'hF] <= 8'(V[secondNibble] <= V[thirdNibble]);
                         end
                     else if (fourthNibble == 4'hE) begin
-                        V[secondNibble] <= V[secondNibble] << 1;
-                        V[4'hF] <= 8'(V[secondNibble][7]);
+                        V[secondNibble] <= V[thirdNibble] << 1;
+                        V[4'hF] <= 8'(V[thirdNibble][7]);
                         end
                     end
                 else if (topNibble == 4'h9) begin
