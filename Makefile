@@ -77,6 +77,31 @@ misc:
 		tb/tb_misc.sv rtl/chip8_cpu.sv rtl/ram.sv
 	./obj_dir/misc/sim_misc
 
+# ---- M9: run a real CHIP-8 ROM in simulation ----
+# Usage: make rom ROM=roms/3-corax+.ch8 [CYCLES=300000] [SEL=0]
+# Fetch the Timendus test suite first with: make roms
+ROM    ?= roms/1-chip8-logo.ch8
+CYCLES ?= 300000
+SEL    ?= 0
+.PHONY: rom
+rom:
+	@mkdir -p obj_dir/rom
+	$(VERILATOR) $(VFLAGS) --Mdir obj_dir/rom -o sim_rom \
+		tb/tb_rom.sv rtl/chip8_cpu.sv rtl/ram.sv
+	xxd -p -c1 $(ROM) > obj_dir/rom/rom.hex
+	./obj_dir/rom/sim_rom +ROM=obj_dir/rom/rom.hex +CYCLES=$(CYCLES) +SEL=$(SEL)
+
+# Timendus chip8-test-suite ROMs (GPL-3.0, fetched from the upstream repo;
+# kept out of git -- see .gitignore).
+.PHONY: roms
+roms:
+	@mkdir -p roms
+	for r in 1-chip8-logo 2-ibm-logo 3-corax+ 4-flags 5-quirks 6-keypad; do \
+		curl -sfL -o roms/$$r.ch8 \
+			"https://raw.githubusercontent.com/Timendus/chip8-test-suite/main/bin/$$r.ch8"; \
+	done
+	@ls -l roms
+
 .PHONY: clean
 clean:
 	rm -rf warmup/obj_dir obj_dir *.vcd warmup/*.vcd

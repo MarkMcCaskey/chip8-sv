@@ -9,3 +9,4 @@ obj_dir/
 # macOS / editor cruft
 .DS_Store
 *.swp
+roms/
