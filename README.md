@@ -28,11 +28,35 @@ rich enough to exercise FSMs, memory, an ALU, video, and I/O.
 
 ```
 make warmup     # builds + runs the counter sanity check, dumps warmup/counter.vcd
+make ram cpu alu ctrl timer display input misc   # the full unit regression
 make clean      # remove build output + waveforms
 ```
 
 `make warmup` proves the whole flow end-to-end before you write any CHIP-8 RTL. It should print
 `WARMUP PASS`. Open `warmup/counter.vcd` in a waveform viewer to watch the counter tick.
+Every other target prints `<NAME> PASS` and dumps a `tb_<name>.vcd` for waveform spelunking.
+
+## Running real ROMs
+
+```
+make roms                                   # fetch the Timendus test suite (GPL-3.0, not committed)
+make rom ROM=roms/3-corax+.ch8              # run a ROM in sim, framebuffer printed as ASCII
+make rom ROM=roms/5-quirks.ch8 SEL=1        # quirks test with CHIP-8 platform preselected
+make run ROM=roms/1-chip8-logo.ch8          # live SDL window + keyboard + beeper
+```
+
+The whole Timendus suite passes as an **original CHIP-8 (COSMAC VIP)**: logo, IBM logo,
+corax+ opcodes, flags, and all six quirks (`VF reset ON`, `memory ON`, `display wait ON`,
+`clipping ON`, `shifting OFF`, `jumping OFF`).
+
+SDL keypad mapping (the classic layout):
+
+```
+1 2 3 4        1 2 3 C
+Q W E R   ->   4 5 6 D
+A S D F        7 8 9 E
+Z X C V        A 0 B F
+```
 
 Layout:
 ```
@@ -55,7 +79,8 @@ Tick these off as you go. Each milestone is independently testable in sim.
 - [x] **M6 — Display** — 64×32 framebuffer + `Dxyn` sprite XOR draw with `VF` collision; `00E0` clear (VIP semantics: coords wrap, sprite clips, draw waits for the 60 Hz tick)
 - [x] **M7 — Input** — 16-key keypad: `Ex9E ExA1 Fx0A` (Fx0A = VIP press-then-release)
 - [x] **M8 — Misc Fx** — `Fx07 Fx15 Fx18 Fx1E Fx29 Fx33 Fx55 Fx65` + `Cxkk` LFSR + font ROM at `0x000` (VIP semantics: `Fx55/Fx65` leave `I = I + x + 1`)
-- [ ] **M9 — Integration** — run CHIP-8 test ROMs in sim, then wire up the SDL live display
+- [x] **M9 — Integration** — run CHIP-8 test ROMs in sim, then wire up the SDL live display
+      (full Timendus suite passes as original CHIP-8; `make run` opens the live window)
 - [ ] **(stretch) FPGA** — open flow (Yosys + nextpnr) to a small board with real VGA/HDMI + buttons
 
 ## CHIP-8 references (spelled out — not clickable)

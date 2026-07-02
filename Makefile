@@ -102,6 +102,21 @@ roms:
 	done
 	@ls -l roms
 
+# ---- M9: live SDL display (real window / keyboard / beeper) ----
+# Usage: make run ROM=roms/1-chip8-logo.ch8
+# The -G override must match kCyclesPerFrame in sim/sim_main.cpp (64 cycles
+# per 60 Hz frame = one timer tick per frame, ~16 instructions/frame).
+.PHONY: sdl run
+sdl:
+	@mkdir -p obj_dir/sdl
+	$(VERILATOR) --cc --exe --build -j 0 -Wall --Mdir obj_dir/sdl \
+		-GCYCLES_PER_TICK=64 \
+		-CFLAGS "$$(sdl2-config --cflags)" -LDFLAGS "$$(sdl2-config --libs)" \
+		-o chip8_sdl rtl/chip8_cpu.sv rtl/ram.sv sim/sim_main.cpp
+
+run: sdl
+	./obj_dir/sdl/chip8_sdl $(ROM)
+
 .PHONY: clean
 clean:
 	rm -rf warmup/obj_dir obj_dir *.vcd warmup/*.vcd

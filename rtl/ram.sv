@@ -5,7 +5,8 @@ module ram (
     input logic writeEnabled,
     output logic [7:0] readData
 );
-    logic [7:0] memory [0:4095];
+    // public_flat_rw: the SDL harness (sim/sim_main.cpp) pokes ROMs in here.
+    logic [7:0] memory [0:4095] /*verilator public_flat_rw*/;
 
     // Standard CHIP-8 hex font: sixteen 5-byte glyphs (0-F) at 0x000, where
     // Fx29 (I = Vx * 5) expects them. Block-RAM-style init, synthesizable.

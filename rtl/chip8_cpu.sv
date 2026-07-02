@@ -73,8 +73,8 @@ module chip8_cpu #(
 
     // 64x32 monochrome framebuffer. Bit 63 of a row is x=0 (leftmost), so a
     // sprite byte lands with `{byte, 56'b0} >> x` and clips off the right edge
-    // for free.
-    logic [63:0] fb [0:31];
+    // for free. public_flat_rd: the SDL harness reads it to draw the window.
+    logic [63:0] fb [0:31] /*verilator public_flat_rd*/;
     logic [5:0] draw_x;
     logic [4:0] draw_y;
     logic [3:0] draw_n;
