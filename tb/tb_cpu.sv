@@ -19,10 +19,13 @@ module tb_cpu;
     logic [15:0] buttons;
     int         errors;
 
+    logic sound_on;
+
     chip8_cpu dut (
-        .clk     (clk),
-        .rst     (rst),
-        .buttons (buttons)
+        .clk      (clk),
+        .rst      (rst),
+        .buttons  (buttons),
+        .sound_on (sound_on)
     );
 
     initial begin

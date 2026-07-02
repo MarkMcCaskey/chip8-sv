@@ -1,13 +1,27 @@
-module chip8_cpu (
+module chip8_cpu #(
+    // CPU clock cycles per 60 Hz timer tick. The default assumes a ~500 kHz
+    // core clock; testbenches override it with a tiny value so ticks are cheap.
+    parameter int CYCLES_PER_TICK = 8333
+) (
     input logic clk,
     input logic rst,
-    input logic [15:0] buttons
+    input logic [15:0] buttons,
+    output logic sound_on   // high while sound_timer > 0 (drives the buzzer)
 );
     logic [7:0] V [0:15];
     logic [11:0] PC;
     logic [15:0] I;
     logic [3:0] SP;
     logic [11:0] stack [0:15];
+
+    // 60 Hz tick divider + the two 8-bit timers it decrements.
+    logic [31:0] tick_cnt;
+    logic tick;
+    logic [7:0] delay_timer;
+    logic [7:0] sound_timer;
+
+    assign tick = (tick_cnt == 32'(CYCLES_PER_TICK - 1));
+    assign sound_on = (sound_timer != 8'd0);
 
     logic [11:0] mem_addr;
     logic [7:0] mem_wdata;
@@ -40,9 +54,22 @@ module chip8_cpu (
             PC <= 12'h200;
             state <= PRIME;
             SP <= 4'd0;
+            tick_cnt <= 32'd0;
+            delay_timer <= 8'd0;
+            sound_timer <= 8'd0;
             // TODO: init other values here
             end
         else begin
+            // Timers run independently of the instruction FSM. A same-edge
+            // Fx15/Fx18 write below overrides the decrement (write wins).
+            tick_cnt <= tick ? 32'd0 : tick_cnt + 1;
+            if (tick) begin
+                if (delay_timer != 8'd0)
+                    delay_timer <= delay_timer - 1;
+                if (sound_timer != 8'd0)
+                    sound_timer <= sound_timer - 1;
+                end
+
             if (state == PRIME) begin
                 state <= FETCH_HI;
                 end
@@ -160,12 +187,15 @@ module chip8_cpu (
                     end
                 else if (topNibble == 4'hF) begin
                     if (bottomHalf == 8'h07) begin
+                        V[secondNibble] <= delay_timer;
                         end
                     else if (bottomHalf == 8'h0A) begin
                         end
                     else if (bottomHalf == 8'h15) begin
+                        delay_timer <= V[secondNibble];
                         end
                     else if (bottomHalf == 8'h18) begin
+                        sound_timer <= V[secondNibble];
                         end
                     else if (bottomHalf == 8'h1E) begin
                         I <= I + 16'(V[secondNibble]);

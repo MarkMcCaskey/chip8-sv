@@ -49,6 +49,14 @@ ctrl:
 		tb/tb_ctrl.sv rtl/chip8_cpu.sv rtl/ram.sv
 	./obj_dir/ctrl/sim_ctrl
 
+# ---- M5: 60 Hz timers ----
+.PHONY: timer
+timer:
+	@mkdir -p obj_dir/timer
+	$(VERILATOR) $(VFLAGS) $(WIP_WAIVERS) --Mdir obj_dir/timer -o sim_timer \
+		tb/tb_timer.sv rtl/chip8_cpu.sv rtl/ram.sv
+	./obj_dir/timer/sim_timer
+
 .PHONY: clean
 clean:
 	rm -rf warmup/obj_dir obj_dir *.vcd warmup/*.vcd
