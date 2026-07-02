@@ -65,6 +65,14 @@ display:
 		tb/tb_display.sv rtl/chip8_cpu.sv rtl/ram.sv
 	./obj_dir/display/sim_display
 
+# ---- M7: keypad input ----
+.PHONY: input
+input:
+	@mkdir -p obj_dir/input
+	$(VERILATOR) $(VFLAGS) $(WIP_WAIVERS) --Mdir obj_dir/input -o sim_input \
+		tb/tb_input.sv rtl/chip8_cpu.sv rtl/ram.sv
+	./obj_dir/input/sim_input
+
 .PHONY: clean
 clean:
 	rm -rf warmup/obj_dir obj_dir *.vcd warmup/*.vcd

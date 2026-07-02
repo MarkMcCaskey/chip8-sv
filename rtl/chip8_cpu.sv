@@ -39,9 +39,15 @@ module chip8_cpu #(
 
     typedef enum logic [3:0] {
         PRIME, FETCH_HI, FETCH_LO, EXEC,
-        DRAW_WAIT, DRAW_ADDR, DRAW_XOR
+        DRAW_WAIT, DRAW_ADDR, DRAW_XOR,
+        WAIT_PRESS, WAIT_RELEASE
     } state_t;
     state_t state;
+
+    // Fx0A bookkeeping: which V register gets the key, and which key we're
+    // waiting to see released.
+    logic [3:0] wait_reg;
+    logic [3:0] wait_key;
 
     // 64x32 monochrome framebuffer. Bit 63 of a row is x=0 (leftmost), so a
     // sprite byte lands with `{byte, 56'b0} >> x` and clips off the right edge
@@ -217,6 +223,8 @@ module chip8_cpu #(
                         V[secondNibble] <= delay_timer;
                         end
                     else if (bottomHalf == 8'h0A) begin
+                        wait_reg <= secondNibble;
+                        state <= WAIT_PRESS;
                         end
                     else if (bottomHalf == 8'h15) begin
                         delay_timer <= V[secondNibble];
@@ -259,6 +267,22 @@ module chip8_cpu #(
                     end
                 draw_r <= draw_r + 1;
                 state <= (4'(draw_r + 4'd1) == draw_n) ? PRIME : DRAW_ADDR;
+                end
+            // Fx0A: block until a key is pressed (lowest index wins if several),
+            // store it, then block again until that key is released -- VIP
+            // behavior, so holding a key can't retrigger the wait. Timers keep
+            // running: they're decremented above, outside the FSM.
+            else if (state == WAIT_PRESS) begin
+                for (int k = 15; k >= 0; k--)
+                    if (buttons[k]) begin
+                        wait_key <= 4'(k);
+                        V[wait_reg] <= 8'(k);
+                        state <= WAIT_RELEASE;
+                        end
+                end
+            else if (state == WAIT_RELEASE) begin
+                if (!buttons[wait_key])
+                    state <= PRIME;
                 end
             end
     end
