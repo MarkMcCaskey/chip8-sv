@@ -41,6 +41,14 @@ alu:
 		tb/tb_alu.sv rtl/chip8_cpu.sv rtl/ram.sv
 	./obj_dir/alu/sim_alu
 
+# ---- M4: control flow (calls/returns/skips/jumps) ----
+.PHONY: ctrl
+ctrl:
+	@mkdir -p obj_dir/ctrl
+	$(VERILATOR) $(VFLAGS) $(WIP_WAIVERS) --Mdir obj_dir/ctrl -o sim_ctrl \
+		tb/tb_ctrl.sv rtl/chip8_cpu.sv rtl/ram.sv
+	./obj_dir/ctrl/sim_ctrl
+
 .PHONY: clean
 clean:
 	rm -rf warmup/obj_dir obj_dir *.vcd warmup/*.vcd

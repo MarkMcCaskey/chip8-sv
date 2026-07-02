@@ -68,7 +68,13 @@ module chip8_cpu (
 
                 PC <= PC + 2;
 
-                if (topNibble == 4'h1) begin
+                if (topNibble == 4'h0) begin
+                    if (bottomHalf == 8'hEE) begin
+                        PC <= stack[SP - 1];
+                        SP <= SP - 1;
+                        end
+                    end
+                else if (topNibble == 4'h1) begin
                     PC <= (opcode[11:0] & 12'hFFF);
                     end
                 else if (topNibble == 4'h2) begin
