@@ -54,7 +54,7 @@ Tick these off as you go. Each milestone is independently testable in sim.
 - [x] **M5 — Timers** — 60 Hz delay + sound, clock divider from the CPU clock (`CYCLES_PER_TICK` param)
 - [x] **M6 — Display** — 64×32 framebuffer + `Dxyn` sprite XOR draw with `VF` collision; `00E0` clear (VIP semantics: coords wrap, sprite clips, draw waits for the 60 Hz tick)
 - [x] **M7 — Input** — 16-key keypad: `Ex9E ExA1 Fx0A` (Fx0A = VIP press-then-release)
-- [ ] **M8 — Misc Fx** — `Fx07 Fx15 Fx18 Fx1E Fx29 Fx33 Fx55 Fx65`
+- [x] **M8 — Misc Fx** — `Fx07 Fx15 Fx18 Fx1E Fx29 Fx33 Fx55 Fx65` + `Cxkk` LFSR + font ROM at `0x000` (VIP semantics: `Fx55/Fx65` leave `I = I + x + 1`)
 - [ ] **M9 — Integration** — run CHIP-8 test ROMs in sim, then wire up the SDL live display
 - [ ] **(stretch) FPGA** — open flow (Yosys + nextpnr) to a small board with real VGA/HDMI + buttons
 

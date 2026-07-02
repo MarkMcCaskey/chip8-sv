@@ -5,10 +5,6 @@
 VERILATOR ?= verilator
 VFLAGS    ?= --binary --timing --trace -Wall -j 0
 
-# Warnings to suppress while the CPU datapath is still half-wired (declared-but-
-# unused state, undriven write port). Drop these as the design fills in.
-WIP_WAIVERS = -Wno-UNUSEDSIGNAL -Wno-UNDRIVEN
-
 # ---- warm-up: prove the toolchain end-to-end ----
 .PHONY: warmup
 warmup:
@@ -29,7 +25,7 @@ ram:
 .PHONY: cpu
 cpu:
 	@mkdir -p obj_dir/cpu
-	$(VERILATOR) $(VFLAGS) $(WIP_WAIVERS) --Mdir obj_dir/cpu -o sim_cpu \
+	$(VERILATOR) $(VFLAGS) --Mdir obj_dir/cpu -o sim_cpu \
 		tb/tb_cpu.sv rtl/chip8_cpu.sv rtl/ram.sv
 	./obj_dir/cpu/sim_cpu
 
@@ -37,7 +33,7 @@ cpu:
 .PHONY: alu
 alu:
 	@mkdir -p obj_dir/alu
-	$(VERILATOR) $(VFLAGS) $(WIP_WAIVERS) --Mdir obj_dir/alu -o sim_alu \
+	$(VERILATOR) $(VFLAGS) --Mdir obj_dir/alu -o sim_alu \
 		tb/tb_alu.sv rtl/chip8_cpu.sv rtl/ram.sv
 	./obj_dir/alu/sim_alu
 
@@ -45,7 +41,7 @@ alu:
 .PHONY: ctrl
 ctrl:
 	@mkdir -p obj_dir/ctrl
-	$(VERILATOR) $(VFLAGS) $(WIP_WAIVERS) --Mdir obj_dir/ctrl -o sim_ctrl \
+	$(VERILATOR) $(VFLAGS) --Mdir obj_dir/ctrl -o sim_ctrl \
 		tb/tb_ctrl.sv rtl/chip8_cpu.sv rtl/ram.sv
 	./obj_dir/ctrl/sim_ctrl
 
@@ -53,7 +49,7 @@ ctrl:
 .PHONY: timer
 timer:
 	@mkdir -p obj_dir/timer
-	$(VERILATOR) $(VFLAGS) $(WIP_WAIVERS) --Mdir obj_dir/timer -o sim_timer \
+	$(VERILATOR) $(VFLAGS) --Mdir obj_dir/timer -o sim_timer \
 		tb/tb_timer.sv rtl/chip8_cpu.sv rtl/ram.sv
 	./obj_dir/timer/sim_timer
 
@@ -61,7 +57,7 @@ timer:
 .PHONY: display
 display:
 	@mkdir -p obj_dir/display
-	$(VERILATOR) $(VFLAGS) $(WIP_WAIVERS) --Mdir obj_dir/display -o sim_display \
+	$(VERILATOR) $(VFLAGS) --Mdir obj_dir/display -o sim_display \
 		tb/tb_display.sv rtl/chip8_cpu.sv rtl/ram.sv
 	./obj_dir/display/sim_display
 
@@ -69,9 +65,17 @@ display:
 .PHONY: input
 input:
 	@mkdir -p obj_dir/input
-	$(VERILATOR) $(VFLAGS) $(WIP_WAIVERS) --Mdir obj_dir/input -o sim_input \
+	$(VERILATOR) $(VFLAGS) --Mdir obj_dir/input -o sim_input \
 		tb/tb_input.sv rtl/chip8_cpu.sv rtl/ram.sv
 	./obj_dir/input/sim_input
+
+# ---- M8: misc Fx (BCD, reg save/load, font, random) ----
+.PHONY: misc
+misc:
+	@mkdir -p obj_dir/misc
+	$(VERILATOR) $(VFLAGS) --Mdir obj_dir/misc -o sim_misc \
+		tb/tb_misc.sv rtl/chip8_cpu.sv rtl/ram.sv
+	./obj_dir/misc/sim_misc
 
 .PHONY: clean
 clean:

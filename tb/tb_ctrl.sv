@@ -23,7 +23,9 @@ module tb_ctrl;
     logic [15:0] buttons;
     int          errors;
 
-    logic sound_on;
+    // verilator lint_off UNUSEDSIGNAL
+    logic sound_on;   // dumped to the VCD; only tb_timer asserts on it
+    // verilator lint_on UNUSEDSIGNAL
 
     chip8_cpu dut (
         .clk      (clk),

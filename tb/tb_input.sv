@@ -25,7 +25,9 @@ module tb_input;
     logic        clk;
     logic        rst;
     logic [15:0] buttons;
-    logic        sound_on;
+    // verilator lint_off UNUSEDSIGNAL
+    logic        sound_on;   // dumped to the VCD; only tb_timer asserts on it
+    // verilator lint_on UNUSEDSIGNAL
     int          errors;
 
     chip8_cpu #(.CYCLES_PER_TICK(16)) dut (
