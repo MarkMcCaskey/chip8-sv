@@ -37,8 +37,20 @@ module chip8_cpu #(
     );
     logic [15:0] opcode;
 
-    typedef enum logic [1:0] { PRIME, FETCH_HI, FETCH_LO, EXEC } state_t;
+    typedef enum logic [3:0] {
+        PRIME, FETCH_HI, FETCH_LO, EXEC,
+        DRAW_WAIT, DRAW_ADDR, DRAW_XOR
+    } state_t;
     state_t state;
+
+    // 64x32 monochrome framebuffer. Bit 63 of a row is x=0 (leftmost), so a
+    // sprite byte lands with `{byte, 56'b0} >> x` and clips off the right edge
+    // for free.
+    logic [63:0] fb [0:31];
+    logic [5:0] draw_x;
+    logic [4:0] draw_y;
+    logic [3:0] draw_n;
+    logic [3:0] draw_r;
 
     always_comb begin
         mem_addr = PC;
@@ -47,6 +59,8 @@ module chip8_cpu #(
             mem_addr = PC + 1;
         else if (state == FETCH_LO)
             mem_addr = PC;
+        else if (state == DRAW_ADDR || state == DRAW_XOR)
+            mem_addr = 12'(I + 16'(draw_r));
     end
 
     always_ff @(posedge clk) begin
@@ -57,6 +71,8 @@ module chip8_cpu #(
             tick_cnt <= 32'd0;
             delay_timer <= 8'd0;
             sound_timer <= 8'd0;
+            for (int i = 0; i < 32; i++)
+                fb[i] <= 64'd0;
             // TODO: init other values here
             end
         else begin
@@ -94,9 +110,14 @@ module chip8_cpu #(
                 bottomHalf = opcode[7:0];
 
                 PC <= PC + 2;
+                state <= PRIME;   // opcodes below may override (e.g. Dxyn)
 
                 if (topNibble == 4'h0) begin
-                    if (bottomHalf == 8'hEE) begin
+                    if (bottomHalf == 8'hE0) begin
+                        for (int i = 0; i < 32; i++)
+                            fb[i] <= 64'd0;
+                        end
+                    else if (bottomHalf == 8'hEE) begin
                         PC <= stack[SP - 1];
                         SP <= SP - 1;
                         end
@@ -171,9 +192,15 @@ module chip8_cpu #(
                 else if (topNibble == 4'hC) // TODO: random numbers somehow
                     V[secondNibble] <= (8'h77 & bottomHalf);
                 else if (topNibble == 4'hD) begin
-                    // TODO: implement draw
-                    // flag set on xor hit
-                    V[4'hF] <= 8'b1;
+                    // Start coords wrap; the sprite itself clips at the edges
+                    // (VIP behavior). Rows are fetched from mem[I..I+n-1] by
+                    // the DRAW_* states, 2 cycles per row.
+                    draw_x <= V[secondNibble][5:0];
+                    draw_y <= V[thirdNibble][4:0];
+                    draw_n <= fourthNibble;
+                    draw_r <= 4'd0;
+                    V[4'hF] <= 8'd0;
+                    state <= DRAW_WAIT;
                     end
                 else if (topNibble == 4'hE) begin
                     if (bottomHalf == 8'h9E) begin
@@ -210,7 +237,28 @@ module chip8_cpu #(
                     else if (bottomHalf == 8'h65) begin
                         end
                     end
-                state <= PRIME;
+                end
+            // Dxyn tail: stall until the 60 Hz tick (VIP draws during vblank),
+            // then 2 cycles per sprite row: present address, then XOR the byte.
+            else if (state == DRAW_WAIT) begin
+                if (tick)
+                    state <= (draw_n == 4'd0) ? PRIME : DRAW_ADDR;
+                end
+            else if (state == DRAW_ADDR) begin
+                state <= DRAW_XOR;
+                end
+            else if (state == DRAW_XOR) begin
+                logic [63:0] spr_mask;
+                logic [5:0] row_idx;
+                spr_mask = {mem_rdata, 56'b0} >> draw_x;
+                row_idx = 6'(draw_y) + 6'(draw_r);
+                if (row_idx < 6'd32) begin   // clip at the bottom edge
+                    if ((fb[row_idx[4:0]] & spr_mask) != 64'd0)
+                        V[4'hF] <= 8'd1;
+                    fb[row_idx[4:0]] <= fb[row_idx[4:0]] ^ spr_mask;
+                    end
+                draw_r <= draw_r + 1;
+                state <= (4'(draw_r + 4'd1) == draw_n) ? PRIME : DRAW_ADDR;
                 end
             end
     end

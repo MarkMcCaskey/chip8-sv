@@ -57,6 +57,14 @@ timer:
 		tb/tb_timer.sv rtl/chip8_cpu.sv rtl/ram.sv
 	./obj_dir/timer/sim_timer
 
+# ---- M6: framebuffer + Dxyn draw ----
+.PHONY: display
+display:
+	@mkdir -p obj_dir/display
+	$(VERILATOR) $(VFLAGS) $(WIP_WAIVERS) --Mdir obj_dir/display -o sim_display \
+		tb/tb_display.sv rtl/chip8_cpu.sv rtl/ram.sv
+	./obj_dir/display/sim_display
+
 .PHONY: clean
 clean:
 	rm -rf warmup/obj_dir obj_dir *.vcd warmup/*.vcd
