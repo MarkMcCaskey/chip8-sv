@@ -9,7 +9,7 @@ module ram #(
     input logic                     writeEnabled,
     output logic [WIDTH-1:0]        readData
 );
-    logic [WIDTH-1:0] memory [DEPTH-1];
+    logic [WIDTH-1:0] memory [DEPTH];
     always_ff @(posedge clk) begin
         if (writeEnabled)
             memory[address] <= writeData;
