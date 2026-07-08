@@ -1,11 +1,15 @@
-module ram (
-    input logic clk,
-    input logic [11:0] address,
-    input logic [7:0] writeData,
-    input logic writeEnabled,
-    output logic [7:0] readData
+module ram #(
+    parameter WIDTH = 8,
+    parameter DEPTH = 4096
+) (
+    input logic                     clk,
+    input logic [$clog2(DEPTH)-1:0] address,
+
+    input logic [WIDTH-1:0]         writeData,
+    input logic                     writeEnabled,
+    output logic [WIDTH-1:0]        readData
 );
-    logic [7:0] memory [0:4095];
+    logic [WIDTH-1:0] memory [DEPTH-1];
     always_ff @(posedge clk) begin
         if (writeEnabled)
             memory[address] <= writeData;
